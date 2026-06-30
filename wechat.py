@@ -48,7 +48,7 @@ def get_access_token() -> str:
 
 def create_draft(title: str, html: str, digest: str) -> WeChatDraftResult:
     token = get_access_token()
-    thumb_media_id = os.environ.get("WECHAT_THUMB_MEDIA_ID", DEFAULT_THUMB_MEDIA_ID)
+    thumb_media_id = os.environ.get("WECHAT_THUMB_MEDIA_ID") or DEFAULT_THUMB_MEDIA_ID
     article = {
         "title": title,
         "thumb_media_id": thumb_media_id,

@@ -26,7 +26,7 @@ def generate_chinese_entries(papers: list[Paper]) -> list[dict]:
     if not api_key:
         raise RuntimeError("Missing OPENAI_API_KEY secret.")
     client = OpenAI(api_key=api_key)
-    model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+    model = os.environ.get("OPENAI_MODEL") or "gpt-4o-mini"
     payload = [asdict(paper) for paper in papers]
     response = client.chat.completions.create(
         model=model,
