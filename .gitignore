@@ -2,6 +2,7 @@
 credentials.json
 token.json
 outputs/
+work/
 __pycache__/
 .pytest_cache/
 .venv/
