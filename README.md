@@ -32,6 +32,32 @@ Do not commit `credentials.json`, `token.json`, AppSecret, or API keys.
 
 The action needs a Gmail OAuth token that can refresh itself. The token JSON should include a `refresh_token`.
 
+### Create `GMAIL_TOKEN_JSON`
+
+1. Open [Google Cloud Console](https://console.cloud.google.com/).
+2. Create or choose a project.
+3. Enable **Gmail API** for the project.
+4. Configure the OAuth consent screen.
+   - User type: **External** is fine for personal use.
+   - Add your Gmail address as a test user if the app is in testing mode.
+5. Create OAuth credentials:
+   - `APIs & Services -> Credentials -> Create Credentials -> OAuth client ID`
+   - Application type: **Desktop app**
+6. Download the client JSON and save it in this repo as `credentials.json`.
+7. Run locally:
+
+```powershell
+python -m pip install -r requirements.txt
+python scripts/get_gmail_token.py
+```
+
+8. A browser window will open. Log in to the Gmail account that receives the daily brief and approve Gmail read-only access.
+9. The script writes `token.json`. Upload it to GitHub Actions secrets:
+
+```powershell
+gh secret set GMAIL_TOKEN_JSON --repo zhangboen/daily-wechat-post --body-file token.json
+```
+
 Expected secret shape:
 
 ```json
