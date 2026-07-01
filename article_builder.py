@@ -68,7 +68,7 @@ def build_html(papers: list[Paper], entries: list[dict], run_date: date) -> tupl
     title = f"今日水文气候文献简报（{run_date.isoformat()}）"
     digest = f"今日筛选 {len(papers)} 篇水文与水文气候论文，涵盖洪水、干旱、气候极端、机器学习和水质过程等主题。"
     parts = [
-        "<section style=\"box-sizing:border-box; max-width:677px; margin:0 auto; padding:0 6px; color:#263238; "
+        "<section style=\"box-sizing:border-box; max-width: 677px; margin: 0 auto; padding: 0 6px; color:#263238; "
         "font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang SC','Microsoft YaHei',Arial,sans-serif; "
         "line-height:1.68; font-size:15px;\">",
         f"<p style=\"margin:0 0 14px;\">今天的 brief 共筛选出 <strong style=\"color:#2878b5;\">{len(papers)} 篇</strong> 水文与水文气候论文。"
@@ -83,7 +83,7 @@ def build_html(papers: list[Paper], entries: list[dict], run_date: date) -> tupl
         link = f'<a href="{html.escape(url)}" style="color:#2878b5; text-decoration:underline;">{html.escape(url)}</a>' if url else ""
         parts.extend(
             [
-                f"<section style=\"margin:16px 0 8px; padding:8px 12px; background:#eef5f8; color:#2c5364; font-weight:700;\">{idx:02d}｜{html.escape(section_label)}</section>",
+                f"<section style=\"margin: 16px 0 8px; padding: 8px 12px; background:#eef5f8; color:#2c5364; font-weight:700;\">{idx:02d}｜{html.escape(section_label)}</section>",
                 f"<h2 style=\"margin:10px 0 6px; color:#162b3c; font-size:18px; line-height:1.42;\">{html.escape(paper.title)}</h2>",
                 f"<p style=\"margin:0 0 6px;\"><strong>中文标题：</strong>{html.escape(chinese_title)} | {html.escape(abbrev)}</p>",
                 f"<p style=\"margin:0 0 6px;\"><strong>Journal：</strong>{html.escape(paper.journal)}</p>",
@@ -93,4 +93,5 @@ def build_html(papers: list[Paper], entries: list[dict], run_date: date) -> tupl
             ]
         )
     parts.append("</section>")
-    return title, digest, "\n".join(parts)
+    html_body = "\n".join(part.strip() for part in parts if part.strip())
+    return title, digest, html_body
