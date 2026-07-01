@@ -2,13 +2,10 @@ name: daily-wechat-post
 
 on:
   schedule:
-    # 00:30 UTC = 08:00 Asia/Shanghai
+    # 00:00 UTC = 08:00 Asia/Shanghai
     - cron: "0 0 * * *"
   workflow_dispatch:
 
-env:
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
-  
 jobs:
   daily-wechat-post:
     runs-on: self-hosted
@@ -16,10 +13,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -36,9 +33,18 @@ jobs:
           WECHAT_THUMB_MEDIA_ID: ${{ secrets.WECHAT_THUMB_MEDIA_ID }}
         run: python main.py
 
+      - name: Send Gmail confirmation email
+        if: success()
+        env:
+          CONFIRMATION_SMTP_USERNAME: ${{ secrets.CONFIRMATION_SMTP_USERNAME }}
+          CONFIRMATION_SMTP_PASSWORD: ${{ secrets.CONFIRMATION_SMTP_PASSWORD }}
+          CONFIRMATION_EMAIL_TO: ${{ secrets.CONFIRMATION_EMAIL_TO }}
+          CONFIRMATION_EMAIL_FROM: ${{ secrets.CONFIRMATION_EMAIL_FROM }}
+        run: python scripts/send_confirmation_email.py
+
       - name: Upload generated article
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: daily-wechat-post-output
           path: outputs/

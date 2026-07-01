@@ -2,7 +2,7 @@
 
 GitHub Actions automation for turning the latest Gmail `daily hydrology paper brief` email into a WeChat Official Account draft.
 
-It runs every day at **08:30 Asia/Shanghai** (`30 0 * * *` UTC).
+It runs every day at **08:00 Asia/Shanghai** (`0 0 * * *` UTC).
 
 ## What It Does
 
@@ -25,8 +25,16 @@ Add these in GitHub repository settings: `Settings -> Secrets and variables -> A
 | `WECHAT_SECRET` | yes | WeChat Official Account AppSecret. |
 | `WECHAT_THUMB_MEDIA_ID` | no | Cover image media id. Defaults to the existing cover media id if omitted. |
 | `OPENAI_MODEL` | no | Defaults to `gpt-4o-mini`. |
+| `CONFIRMATION_SMTP_USERNAME` | yes | Gmail address used to send the success confirmation email. |
+| `CONFIRMATION_SMTP_PASSWORD` | yes | Gmail app password for `CONFIRMATION_SMTP_USERNAME`. |
+| `CONFIRMATION_EMAIL_TO` | no | Recipient address. Defaults to `CONFIRMATION_SMTP_USERNAME`. |
+| `CONFIRMATION_EMAIL_FROM` | no | Sender address. Defaults to `CONFIRMATION_SMTP_USERNAME`. |
 
 Do not commit `credentials.json`, `token.json`, AppSecret, or API keys.
+
+## Success Confirmation Email
+
+After a successful WeChat draft creation, the workflow sends a confirmation email through Gmail SMTP. For a Gmail account, create an app password in Google Account security settings and save it as `CONFIRMATION_SMTP_PASSWORD`; use the Gmail address as `CONFIRMATION_SMTP_USERNAME`. If `CONFIRMATION_EMAIL_TO` is omitted, the confirmation email is sent to the same Gmail account.
 
 ## Gmail OAuth Token
 
