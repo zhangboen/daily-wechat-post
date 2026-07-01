@@ -2,8 +2,8 @@ name: daily-wechat-post
 
 on:
   schedule:
-    # 00:30 UTC = 08:30 Asia/Shanghai
-    - cron: "30 0 * * *"
+    # 00:30 UTC = 08:00 Asia/Shanghai
+    - cron: "0 0 * * *"
   workflow_dispatch:
 
 env:
