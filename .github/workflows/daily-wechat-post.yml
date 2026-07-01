@@ -2,7 +2,7 @@ name: daily-wechat-post
 
 on:
   schedule:
-    # 00:00 UTC = 07:50 Asia/Shanghai
+    # 23:50 UTC = 07:50 Asia/Shanghai
     - cron: "50 23 * * *"
   workflow_dispatch:
 
@@ -13,15 +13,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: Show Python version
+        run: python3 --version
 
       - name: Show runner public IP for WeChat whitelist
         run: |
@@ -31,20 +26,13 @@ jobs:
           curl -fsS https://ifconfig.me || true
           echo
 
-      - name: Create WeChat draft from latest Outlook brief
+      - name: Create WeChat draft from generated HTML
         env:
-          OUTLOOK_EMAIL: ${{ secrets.OUTLOOK_EMAIL }}
-          OUTLOOK_PASSWORD: ${{ secrets.OUTLOOK_PASSWORD }}
-          OUTLOOK_IMAP_HOST: ${{ secrets.OUTLOOK_IMAP_HOST }}
-          OUTLOOK_IMAP_PORT: ${{ secrets.OUTLOOK_IMAP_PORT }}
-          OUTLOOK_IMAP_FOLDER: ${{ secrets.OUTLOOK_IMAP_FOLDER }}
-          MAIL_SEARCH_SUBJECT: ${{ secrets.MAIL_SEARCH_SUBJECT }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+          WECHAT_HTML_SOURCE_BASE_URL: ${{ secrets.WECHAT_HTML_SOURCE_BASE_URL }}
           WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
           WECHAT_SECRET: ${{ secrets.WECHAT_SECRET }}
           WECHAT_THUMB_MEDIA_ID: ${{ secrets.WECHAT_THUMB_MEDIA_ID }}
-        run: python main.py
+        run: python3 main.py
 
       - name: Send Gmail confirmation email
         if: success()
@@ -53,11 +41,11 @@ jobs:
           CONFIRMATION_SMTP_PASSWORD: ${{ secrets.CONFIRMATION_SMTP_PASSWORD }}
           CONFIRMATION_EMAIL_TO: ${{ secrets.CONFIRMATION_EMAIL_TO }}
           CONFIRMATION_EMAIL_FROM: ${{ secrets.CONFIRMATION_EMAIL_FROM }}
-        run: python scripts/send_confirmation_email.py
+        run: python3 scripts/send_confirmation_email.py
 
       - name: Upload generated article
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: daily-wechat-post-output
           path: outputs/

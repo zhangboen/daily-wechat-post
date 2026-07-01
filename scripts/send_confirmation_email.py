@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 import os
 import smtplib
@@ -10,7 +8,7 @@ from pathlib import Path
 
 def _latest_metadata() -> dict:
     output_dir = Path("outputs")
-    metadata_files = sorted(output_dir.glob("daily-wechat-post-*.json"), key=lambda path: path.stat().st_mtime)
+    metadata_files = sorted(output_dir.glob("wechat-post-*.json"), key=lambda path: path.stat().st_mtime)
     if not metadata_files:
         return {}
     try:
@@ -40,7 +38,6 @@ def main() -> int:
     run_url = f"https://github.com/{repo}/actions/runs/{run_id}" if repo and run_id else ""
     completed_at = datetime.now().astimezone().isoformat(timespec="seconds")
     article_title = metadata.get("title") or "daily-wechat-post"
-    paper_count = metadata.get("paper_count", "unknown")
 
     message = EmailMessage()
     message["From"] = sender
@@ -55,8 +52,7 @@ def main() -> int:
                 f"Repository: {repo or 'unknown'}",
                 f"Run URL: {run_url or 'unavailable'}",
                 f"Article title: {article_title}",
-                f"Paper count: {paper_count}",
-                f"Source email: {metadata.get('email_subject', 'unknown')}",
+                f"Source base URL: {metadata.get('source_base_url', 'unknown')}",
             ]
         )
     )

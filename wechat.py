@@ -1,10 +1,7 @@
-from __future__ import annotations
-
 import json
 import os
-from dataclasses import dataclass
-
-import requests
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 from config import DEFAULT_THUMB_MEDIA_ID
 
@@ -13,19 +10,26 @@ TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/token"
 DRAFT_ADD_URL = "https://api.weixin.qq.com/cgi-bin/draft/add"
 
 
-@dataclass
 class WeChatDraftResult:
-    media_id: str | None
-    raw: dict
+    def __init__(self, media_id, raw):
+        self.media_id = media_id
+        self.raw = raw
 
 
-def _request_json(method: str, url: str, **kwargs) -> dict:
-    response = requests.request(method, url, timeout=60, **kwargs)
-    response.raise_for_status()
-    return response.json()
+def _request_json(method, url, params=None, payload=None):
+    if params:
+        url = "%s?%s" % (url, urlencode(params))
+    data = None
+    headers = {}
+    if payload is not None:
+        data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        headers["Content-Type"] = "application/json; charset=utf-8"
+    request = Request(url, data=data, headers=headers, method=method)
+    with urlopen(request, timeout=60) as response:
+        return json.loads(response.read().decode("utf-8"))
 
 
-def get_access_token() -> str:
+def get_access_token():
     appid = os.environ.get("WECHAT_APPID")
     secret = os.environ.get("WECHAT_SECRET")
     if not appid or not secret:
@@ -42,11 +46,11 @@ def get_access_token() -> str:
     )
     token = result.get("access_token")
     if not token:
-        raise RuntimeError(f"Failed to get WeChat access_token: {json.dumps(result, ensure_ascii=False)}")
+        raise RuntimeError("Failed to get WeChat access_token: %s" % json.dumps(result, ensure_ascii=False))
     return token
 
 
-def create_draft(title: str, html: str, digest: str) -> WeChatDraftResult:
+def create_draft(title, html, digest):
     token = get_access_token()
     thumb_media_id = os.environ.get("WECHAT_THUMB_MEDIA_ID") or DEFAULT_THUMB_MEDIA_ID
     article = {
@@ -62,8 +66,8 @@ def create_draft(title: str, html: str, digest: str) -> WeChatDraftResult:
         "POST",
         DRAFT_ADD_URL,
         params={"access_token": token},
-        json={"articles": [article]},
+        payload={"articles": [article]},
     )
     if result.get("errcode"):
-        raise RuntimeError(f"Failed to create WeChat draft: {json.dumps(result, ensure_ascii=False)}")
+        raise RuntimeError("Failed to create WeChat draft: %s" % json.dumps(result, ensure_ascii=False))
     return WeChatDraftResult(media_id=result.get("media_id"), raw=result)
