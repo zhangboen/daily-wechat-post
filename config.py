@@ -2,12 +2,6 @@ from __future__ import annotations
 
 DEFAULT_THUMB_MEDIA_ID = "WHGCmfD-r8bdMdRaaQ1OTVynZyxGthSTapd-_OkVXFpFseOQI85iM6PMG5XDlMzH"
 
-GMAIL_QUERIES = [
-    'subject:("Daily Hydrology Paper Brief") newer_than:14d',
-    '"daily hydrology paper brief" newer_than:14d',
-    '"Hydrology Paper Brief" newer_than:14d',
-]
-
 JOURNAL_ABBREVIATIONS = {
     "Geoscientific Model Development": "GMD",
     "Hydrology and Earth System Sciences": "HESS",

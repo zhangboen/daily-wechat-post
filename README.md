@@ -1,12 +1,12 @@
 # daily-wechat-post
 
-GitHub Actions automation for turning the latest Gmail `daily hydrology paper brief` email into a WeChat Official Account draft.
+GitHub Actions automation for turning the latest Outlook `daily hydrology paper brief` email into a WeChat Official Account draft.
 
 It runs every day at **08:00 Asia/Shanghai** (`0 0 * * *` UTC).
 
 ## What It Does
 
-1. Reads the latest Gmail email matching `daily hydrology paper brief`.
+1. Reads the latest Outlook email matching `daily hydrology paper brief`.
 2. Parses papers in email order.
 3. Fills missing abstracts from DOI/Crossref/Semantic Scholar when possible.
 4. Uses OpenAI to translate titles and write 2-3 sentence Chinese hydrology/hydroclimate summaries.
@@ -19,7 +19,12 @@ Add these in GitHub repository settings: `Settings -> Secrets and variables -> A
 
 | Secret | Required | Notes |
 | --- | --- | --- |
-| `GMAIL_TOKEN_JSON` | yes | OAuth token JSON for Gmail API with `gmail.readonly` scope. |
+| `OUTLOOK_EMAIL` | yes | Outlook mailbox that receives the daily brief. |
+| `OUTLOOK_PASSWORD` | yes | Outlook password or app password for IMAP access. |
+| `OUTLOOK_IMAP_HOST` | no | Defaults to `outlook.office365.com`. |
+| `OUTLOOK_IMAP_PORT` | no | Defaults to `993`. |
+| `OUTLOOK_IMAP_FOLDER` | no | Defaults to `INBOX`. |
+| `MAIL_SEARCH_SUBJECT` | no | Defaults to `Daily Hydrology Paper Brief`. |
 | `OPENAI_API_KEY` | yes | Used for Chinese title translation and summaries. |
 | `WECHAT_APPID` | yes | WeChat Official Account AppID. |
 | `WECHAT_SECRET` | yes | WeChat Official Account AppSecret. |
@@ -36,48 +41,16 @@ Do not commit `credentials.json`, `token.json`, AppSecret, or API keys.
 
 After a successful WeChat draft creation, the workflow sends a confirmation email through Gmail SMTP. For a Gmail account, create an app password in Google Account security settings and save it as `CONFIRMATION_SMTP_PASSWORD`; use the Gmail address as `CONFIRMATION_SMTP_USERNAME`. If `CONFIRMATION_EMAIL_TO` is omitted, the confirmation email is sent to the same Gmail account.
 
-## Gmail OAuth Token
+## Outlook IMAP Setup
 
-The action needs a Gmail OAuth token that can refresh itself. The token JSON should include a `refresh_token`.
-
-### Create `GMAIL_TOKEN_JSON`
-
-1. Open [Google Cloud Console](https://console.cloud.google.com/).
-2. Create or choose a project.
-3. Enable **Gmail API** for the project.
-4. Configure the OAuth consent screen.
-   - User type: **External** is fine for personal use.
-   - Add your Gmail address as a test user if the app is in testing mode.
-5. Create OAuth credentials:
-   - `APIs & Services -> Credentials -> Create Credentials -> OAuth client ID`
-   - Application type: **Desktop app**
-6. Download the client JSON and save it in this repo as `credentials.json`.
-7. Run locally:
+The action reads the source brief from Outlook over IMAP. Save the mailbox and password as GitHub Actions secrets:
 
 ```powershell
-python -m pip install -r requirements.txt
-python scripts/get_gmail_token.py
+gh secret set OUTLOOK_EMAIL --repo zhangboen/daily-wechat-post --body "boenzhang.gis@outlook.com"
+gh secret set OUTLOOK_PASSWORD --repo zhangboen/daily-wechat-post --body "your-outlook-password-or-app-password"
 ```
 
-8. A browser window will open. Log in to the Gmail account that receives the daily brief and approve Gmail read-only access.
-9. The script writes `token.json`. Upload it to GitHub Actions secrets:
-
-```powershell
-gh secret set GMAIL_TOKEN_JSON --repo zhangboen/daily-wechat-post --body-file token.json
-```
-
-Expected secret shape:
-
-```json
-{
-  "token": "...",
-  "refresh_token": "...",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "client_id": "...",
-  "client_secret": "...",
-  "scopes": ["https://www.googleapis.com/auth/gmail.readonly"]
-}
-```
+If the mailbox uses a custom IMAP host, folder, or subject line, also set `OUTLOOK_IMAP_HOST`, `OUTLOOK_IMAP_PORT`, `OUTLOOK_IMAP_FOLDER`, or `MAIL_SEARCH_SUBJECT`.
 
 ## WeChat IP Whitelist
 
@@ -85,6 +58,8 @@ WeChat may reject GitHub Actions with `errcode 40164` if the runner IP is not in
 
 - a self-hosted GitHub Actions runner on a stable whitelisted IP, or
 - a stable proxy/server whose IP is whitelisted.
+
+The workflow prints the current GitHub runner public IP before calling the WeChat API. If you see `errcode 40164`, add that printed IP to the WeChat Official Account IP whitelist and re-run the workflow. This is a temporary fix because GitHub-hosted runner IPs may change on future runs.
 
 ## Manual Run
 

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from abstract_lookup import lookup_abstract
 from article_builder import build_html, generate_chinese_entries
-from gmail_client import get_latest_brief_email
+from mail_client import get_latest_brief_email
 from paper_parser import parse_papers
 from wechat import create_draft
 

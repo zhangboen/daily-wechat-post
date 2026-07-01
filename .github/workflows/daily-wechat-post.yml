@@ -23,9 +23,22 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Create WeChat draft from latest Gmail brief
+      - name: Show runner public IP for WeChat whitelist
+        run: |
+          echo "Runner public IPv4 candidates:"
+          curl -fsS https://api.ipify.org || true
+          echo
+          curl -fsS https://ifconfig.me || true
+          echo
+
+      - name: Create WeChat draft from latest Outlook brief
         env:
-          GMAIL_TOKEN_JSON: ${{ secrets.GMAIL_TOKEN_JSON }}
+          OUTLOOK_EMAIL: ${{ secrets.OUTLOOK_EMAIL }}
+          OUTLOOK_PASSWORD: ${{ secrets.OUTLOOK_PASSWORD }}
+          OUTLOOK_IMAP_HOST: ${{ secrets.OUTLOOK_IMAP_HOST }}
+          OUTLOOK_IMAP_PORT: ${{ secrets.OUTLOOK_IMAP_PORT }}
+          OUTLOOK_IMAP_FOLDER: ${{ secrets.OUTLOOK_IMAP_FOLDER }}
+          MAIL_SEARCH_SUBJECT: ${{ secrets.MAIL_SEARCH_SUBJECT }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
