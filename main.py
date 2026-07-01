@@ -15,7 +15,8 @@ DEFAULT_SOURCE_BASE_URL = (
 
 
 def source_base_url():
-    return os.environ.get("WECHAT_HTML_SOURCE_BASE_URL", DEFAULT_SOURCE_BASE_URL).rstrip("/")
+    configured_url = os.environ.get("WECHAT_HTML_SOURCE_BASE_URL")
+    return (configured_url or DEFAULT_SOURCE_BASE_URL).rstrip("/")
 
 
 def fetch_text(url):
