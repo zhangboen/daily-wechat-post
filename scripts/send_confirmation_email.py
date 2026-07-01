@@ -25,8 +25,12 @@ def _required_env(name: str) -> str:
 
 
 def main() -> int:
-    username = _required_env("CONFIRMATION_SMTP_USERNAME")
-    password = _required_env("CONFIRMATION_SMTP_PASSWORD")
+    username = os.environ.get("CONFIRMATION_SMTP_USERNAME", "").strip()
+    password = os.environ.get("CONFIRMATION_SMTP_PASSWORD", "").strip()
+    if not username or not password:
+        print("Confirmation email is not configured; skipping.")
+        return 0
+
     recipient = os.environ.get("CONFIRMATION_EMAIL_TO", "").strip() or username
     sender = os.environ.get("CONFIRMATION_EMAIL_FROM", "").strip() or username
     host = os.environ.get("CONFIRMATION_SMTP_HOST", "smtp.gmail.com")
