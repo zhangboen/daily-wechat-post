@@ -5,6 +5,11 @@ on:
     # 23:50 UTC = 07:50 Asia/Shanghai
     - cron: "50 22 * * *"
   workflow_dispatch:
+    inputs:
+      send_confirmation:
+        description: "Send the usual confirmation email after creating the draft"
+        type: boolean
+        default: true
 
 jobs:
   daily-wechat-post:
@@ -35,7 +40,7 @@ jobs:
         run: python3 main.py
 
       - name: Send Gmail confirmation email
-        if: success()
+        if: success() && (github.event_name != 'workflow_dispatch' || inputs.send_confirmation)
         env:
           CONFIRMATION_SMTP_USERNAME: ${{ secrets.CONFIRMATION_SMTP_USERNAME }}
           CONFIRMATION_SMTP_PASSWORD: ${{ secrets.CONFIRMATION_SMTP_PASSWORD }}
