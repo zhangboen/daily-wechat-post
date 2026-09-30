@@ -1,8 +1,11 @@
 import argparse
 import json
 import os
+import time
 from datetime import datetime, timedelta, timezone
+from http.client import HTTPException
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.request import urlopen
 
 from wechat import create_draft
@@ -12,6 +15,9 @@ SHANGHAI = timezone(timedelta(hours=8))
 DEFAULT_SOURCE_BASE_URL = (
     "https://raw.githubusercontent.com/zhangboen/hydrology-paper-brief/main/outputs"
 )
+DOWNLOAD_TIMEOUT_SECONDS = 180
+DOWNLOAD_MAX_ATTEMPTS = 3
+DOWNLOAD_RETRY_DELAY_SECONDS = 5
 
 
 def source_base_url():
@@ -20,8 +26,23 @@ def source_base_url():
 
 
 def fetch_text(url):
-    with urlopen(url, timeout=60) as response:
-        return response.read().decode("utf-8")
+    for attempt in range(1, DOWNLOAD_MAX_ATTEMPTS + 1):
+        print("Downloading source file (attempt %s/%s, timeout %ss)." % (
+            attempt, DOWNLOAD_MAX_ATTEMPTS, DOWNLOAD_TIMEOUT_SECONDS
+        ), flush=True)
+        try:
+            with urlopen(url, timeout=DOWNLOAD_TIMEOUT_SECONDS) as response:
+                return response.read().decode("utf-8")
+        except (OSError, HTTPException) as error:
+            # Retry transient failures, not permanent errors such as a missing file.
+            if isinstance(error, HTTPError) and error.code not in (408, 429) and not 500 <= error.code < 600:
+                raise
+            if attempt == DOWNLOAD_MAX_ATTEMPTS:
+                raise
+            print("Download failed (%s); retrying in %s seconds." % (
+                type(error).__name__, DOWNLOAD_RETRY_DELAY_SECONDS
+            ), flush=True)
+            time.sleep(DOWNLOAD_RETRY_DELAY_SECONDS)
 
 
 def load_source_article(run_date):

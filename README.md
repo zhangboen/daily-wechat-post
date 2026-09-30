@@ -41,6 +41,15 @@ https://raw.githubusercontent.com/zhangboen/hydrology-paper-brief/main/outputs/w
 
 The JSON provides the WeChat draft title and digest. The HTML provides the article body.
 
+Each source-file download uses a 180-second network timeout and up to three
+attempts in total (the initial request plus two retries), with a five-second
+delay between attempts. Connection/read failures, incomplete HTTP responses,
+HTTP 408/429, and HTTP 5xx responses are retried. Other HTTP errors, such as a
+missing file (404), fail immediately. A read failure restarts the entire file
+download. This timeout applies to blocking network operations, not the total
+workflow duration. Draft creation is not automatically retried, to avoid
+creating duplicate drafts after an ambiguous API response.
+
 ## Manual Run
 
 In GitHub, open `Actions -> daily-wechat-post -> Run workflow`.
