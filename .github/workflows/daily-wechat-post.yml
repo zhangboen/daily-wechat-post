@@ -2,23 +2,44 @@ name: daily-wechat-post
 
 on:
   schedule:
-    # 23:50 UTC = 07:50 Asia/Shanghai
+    # 22:50 UTC = 06:50 Asia/Shanghai the following day
     - cron: "50 22 * * *"
   workflow_dispatch:
     inputs:
+      dry_run:
+        description: "Validate article loading without creating a draft or sending email"
+        type: boolean
+        default: false
       send_confirmation:
         description: "Send the usual confirmation email after creating the draft"
         type: boolean
         default: true
 
+concurrency:
+  group: daily-wechat-post
+  cancel-in-progress: false
+
 jobs:
   daily-wechat-post:
     runs-on: self-hosted
     timeout-minutes: 20
+    env:
+      WECHAT_HTML_SOURCE_BASE_URL: ${{ secrets.WECHAT_HTML_SOURCE_BASE_URL }}
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Check out generated articles
+        if: env.WECHAT_HTML_SOURCE_BASE_URL == ''
+        uses: actions/checkout@v4
+        with:
+          repository: zhangboen/hydrology-paper-brief
+          ref: main
+          path: _article-source
+          sparse-checkout: outputs
+          fetch-depth: 1
+          persist-credentials: false
 
       - name: Show Python version
         run: python3 --version
@@ -26,21 +47,27 @@ jobs:
       - name: Show runner public IP for WeChat whitelist
         run: |
           echo "Runner public IPv4 candidates:"
-          curl -fsS https://api.ipify.org || true
+          curl -4 -fsS --connect-timeout 5 --max-time 10 https://api.ipify.org || true
           echo
-          curl -fsS https://ifconfig.me || true
+          curl -4 -fsS --connect-timeout 5 --max-time 10 https://ifconfig.me/ip || true
           echo
 
       - name: Create WeChat draft from generated HTML
         env:
-          WECHAT_HTML_SOURCE_BASE_URL: ${{ secrets.WECHAT_HTML_SOURCE_BASE_URL }}
+          WECHAT_SOURCE_DIR: _article-source/outputs
+          DRY_RUN: ${{ inputs.dry_run }}
           WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
           WECHAT_SECRET: ${{ secrets.WECHAT_SECRET }}
           WECHAT_THUMB_MEDIA_ID: ${{ secrets.WECHAT_THUMB_MEDIA_ID }}
-        run: python3 main.py
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 main.py --dry-run
+          else
+            python3 main.py
+          fi
 
       - name: Send Gmail confirmation email
-        if: success() && (github.event_name != 'workflow_dispatch' || inputs.send_confirmation)
+        if: success() && !inputs.dry_run && (github.event_name != 'workflow_dispatch' || inputs.send_confirmation)
         env:
           CONFIRMATION_SMTP_USERNAME: ${{ secrets.CONFIRMATION_SMTP_USERNAME }}
           CONFIRMATION_SMTP_PASSWORD: ${{ secrets.CONFIRMATION_SMTP_PASSWORD }}

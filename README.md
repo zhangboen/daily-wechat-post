@@ -9,9 +9,11 @@ outputs/wechat-post-YYYY-MM-DD.html
 outputs/wechat-post-YYYY-MM-DD.json
 ```
 
-`daily-wechat-post` only fetches those files and calls the WeChat draft API.
+`daily-wechat-post` only loads those files and calls the WeChat draft API.
 
-It runs every day at **07:50 Asia/Shanghai** (`50 23 * * *` UTC), after the paper brief workflow has had time to generate the HTML.
+It is scheduled every day at **06:50 Asia/Shanghai** (`50 22 * * *` UTC).
+GitHub scheduled runs may start later. The source article for that date must
+already exist before draft creation.
 
 ## Required GitHub Secrets
 
@@ -31,6 +33,16 @@ Add these in GitHub repository settings: `Settings -> Secrets and variables -> A
 Do not commit AppSecret, SMTP passwords, or API keys.
 
 ## Source Files
+
+The workflow checks out `zhangboen/hydrology-paper-brief` with sparse checkout
+of `outputs/`, then reads the HTML and JSON locally from the same commit.
+This avoids the runner's unreliable connection to `raw.githubusercontent.com`.
+`WECHAT_SOURCE_DIR` selects this local directory. Missing files fail explicitly;
+the program never silently publishes yesterday's article.
+
+An explicitly configured `WECHAT_HTML_SOURCE_BASE_URL` retains priority and
+uses HTTP downloads instead; the source checkout is skipped in that case.
+Running locally without either setting also retains HTTP downloads.
 
 By default, for date `2026-07-01`, this repo fetches:
 
@@ -53,6 +65,9 @@ creating duplicate drafts after an ambiguous API response.
 ## Manual Run
 
 In GitHub, open `Actions -> daily-wechat-post -> Run workflow`.
+Enable `dry_run` to validate today's article loading without calling the WeChat
+API or sending confirmation email. Workflow concurrency prevents overlapping
+runs, but manually running draft creation again can still create another draft.
 
 For local dry run:
 

@@ -46,12 +46,21 @@ def fetch_text(url):
 
 
 def load_source_article(run_date):
-    base_url = source_base_url()
-    html_url = "%s/wechat-post-%s.html" % (base_url, run_date)
-    json_url = "%s/wechat-post-%s.json" % (base_url, run_date)
-
-    html = fetch_text(html_url)
-    metadata = json.loads(fetch_text(json_url))
+    source_dir = os.environ.get("WECHAT_SOURCE_DIR")
+    if source_dir and not os.environ.get("WECHAT_HTML_SOURCE_BASE_URL"):
+        # Read both files from the same checked-out commit; never use an older date.
+        source = Path(source_dir)
+        print("Reading checked-out article for %s." % run_date, flush=True)
+        html = (source / ("wechat-post-%s.html" % run_date)).read_text(encoding="utf-8")
+        metadata = json.loads(
+            (source / ("wechat-post-%s.json" % run_date)).read_text(encoding="utf-8")
+        )
+    else:
+        base_url = source_base_url()
+        html_url = "%s/wechat-post-%s.html" % (base_url, run_date)
+        json_url = "%s/wechat-post-%s.json" % (base_url, run_date)
+        html = fetch_text(html_url)
+        metadata = json.loads(fetch_text(json_url))
     title = metadata.get("title") or "今日水文气候文献简报（%s）" % run_date
     digest = metadata.get("digest") or "今日水文气候文献简报。"
     return title, digest, html
